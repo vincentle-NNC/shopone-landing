@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopOne — Phần mềm quản lý bán hàng cho cửa hàng bán lẻ</title>
+<meta name="description" content="ShopOne giúp chủ cửa hàng quản lý tồn kho, công nợ, đồng bộ Shopee/Lazada/TikTok Shop và xem báo cáo doanh thu — tất cả trong một màn hình.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16241F;
+    --paper:#EFF2EC;
+    --paper-alt:#E5E9DF;
+    --teal:#0B5D52;
+    --teal-dark:#073E38;
+    --amber:#E8963C;
+    --amber-deep:#C97A25;
+    --muted:#6E6A5C;
+    --line:#D6D1C2;
+    --white:#FBFCFA;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Be Vietnam Pro', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    color:var(--ink);
+    line-height:1.1;
+    margin:0;
+  }
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(239,242,236,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1120px;margin:0 auto;}
+  .nav .links{display:flex;gap:28px;font-size:15px;font-weight:500;}
+  .nav .links a{text-decoration:none;color:var(--ink);opacity:0.75;transition:opacity .15s;}
+  .nav .links a:hover{opacity:1;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:12px 22px;border-radius:999px;font-weight:600;font-size:15px;
+    text-decoration:none;cursor:pointer;border:none;transition:transform .15s ease, box-shadow .15s ease;
+    font-family:'Be Vietnam Pro',sans-serif;
+  }
+  .btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  .btn-primary{background:var(--teal);color:var(--white);box-shadow:0 1px 0 rgba(0,0,0,0.05);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(11,93,82,0.25);}
+  .btn-amber{background:var(--amber);color:var(--teal-dark);}
+  .btn-amber:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(232,150,60,0.35);}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--teal);}
+  .nav-cta{display:none;}
+  @media(min-width:720px){.nav-cta{display:inline-flex;}}
+
+  /* Hero */
+  .hero{padding:64px 0 40px;}
+  .hero-grid{display:grid;grid-template-columns:1fr;gap:48px;align-items:center;}
+  @media(min-width:960px){.hero-grid{grid-template-columns:1.05fr 0.95fr;gap:56px;}}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--teal);
+    background:rgba(11,93,82,0.08);padding:6px 14px;border-radius:999px;margin-bottom:20px;
+  }
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  @media (prefers-reduced-motion: reduce){.eyebrow .dot{animation:none;}}
+  .hero h1{font-size:clamp(34px,5vw,52px);font-weight:700;letter-spacing:-.01em;}
+  .hero h1 em{font-style:italic;font-weight:500;color:var(--teal);}
+  .hero p.lead{margin-top:20px;font-size:18px;color:var(--muted);max-width:46ch;}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:32px;}
+  .hero-note{margin-top:18px;font-size:14px;color:var(--muted);}
+
+  /* Receipt card - signature element */
+  .receipt-wrap{display:flex;justify-content:center;}
+  .receipt{
+    position:relative;width:100%;max-width:340px;
+    background:var(--white);
+    border-radius:6px;
+    padding:28px 26px 30px;
+    box-shadow:0 24px 48px -16px rgba(11,58,50,0.28), 0 2px 0 rgba(0,0,0,0.03);
+    font-family:'Be Vietnam Pro',monospace;
+    transform:rotate(2deg);
+  }
+  .receipt::before,.receipt::after{
+    content:"";position:absolute;left:0;right:0;height:10px;
+    background:
+      linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0/12px 12px repeat-x,
+      linear-gradient(-135deg, var(--paper) 50%, transparent 50%) 0 0/12px 12px repeat-x;
+  }
+  .receipt::before{top:-1px;}
+  .receipt::after{bottom:-1px;transform:rotate(180deg);}
+  .receipt .r-head{text-align:center;margin-bottom:18px;}
+  .receipt .r-head .logo-mini{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:.02em;}
+  .receipt .r-head .logo-mini em{font-style:italic;color:var(--amber-deep);}
+  .receipt .r-head small{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
+  .r-divider{border-top:1px dashed var(--line);margin:14px 0;}
+  .r-row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;}
+  .r-row .label{color:var(--muted);}
+  .r-row .value{font-weight:600;font-variant-numeric:tabular-nums;}
+  .r-row .value.live{color:var(--teal);}
+  .r-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;}
+  .r-total .label{font-size:13px;color:var(--muted);}
+  .r-total .value{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--teal-dark);}
+  .r-sync{
+    display:flex;align-items:center;gap:8px;margin-top:16px;
+    font-size:12px;color:var(--muted);justify-content:center;
+  }
+  .r-sync .sdot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 1.4s infinite;}
+
+  /* Trust bar */
+  .trust{padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper-alt);}
+  .trust-row{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;font-size:14px;color:var(--muted);}
+  .trust-row .chip{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink);}
+  .trust-row .chip .n{color:var(--teal);font-family:'Fraunces',serif;font-weight:700;}
+
+  section{padding:88px 0;}
+  .section-head{max-width:640px;margin:0 0 48px;}
+  .section-head .eyebrow{margin-bottom:14px;}
+  .section-head h2{font-size:clamp(28px,3.6vw,38px);font-weight:600;}
+  .section-head p{margin-top:14px;color:var(--muted);font-size:17px;}
+
+  /* Feature tags */
+  .features{display:grid;grid-template-columns:1fr;gap:18px;}
+  @media(min-width:700px){.features{grid-template-columns:repeat(2,1fr);}}
+  @media(min-width:1000px){.features{grid-template-columns:repeat(3,1fr);}}
+  .tag-card{
+    position:relative;background:var(--white);border:1px solid var(--line);
+    border-radius:14px;padding:26px 24px 24px;
+  }
+  .tag-card::before{
+    content:"";position:absolute;top:20px;left:-7px;width:14px;height:14px;
+    background:var(--paper);border:1px solid var(--line);border-radius:50%;
+  }
+  .tag-card h3{font-size:18px;font-weight:600;font-family:'Be Vietnam Pro';margin-bottom:8px;}
+  .tag-card p{margin:0;color:var(--muted);font-size:15px;}
+  .tag-card .num{font-family:'Fraunces',serif;color:var(--amber-deep);font-size:13px;font-weight:600;letter-spacing:.04em;display:block;margin-bottom:10px;}
+
+  /* Why section */
+  .why{background:var(--teal-dark);color:var(--white);border-radius:24px;padding:56px 40px;}
+  .why .section-head h2, .why .section-head p{color:var(--white);}
+  .why .section-head p{color:rgba(255,255,255,0.72);}
+  .why-grid{display:grid;grid-template-columns:1fr;gap:24px;}
+  @media(min-width:800px){.why-grid{grid-template-columns:repeat(2,1fr);}}
+  .why-item{border-top:1px solid rgba(255,255,255,0.18);padding-top:18px;}
+  .why-item h3{color:var(--amber);font-size:16px;font-weight:600;font-family:'Be Vietnam Pro';margin-bottom:8px;}
+  .why-item p{margin:0;color:rgba(255,255,255,0.78);font-size:15px;}
+
+  /* Pricing */
+  .pricing-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  @media(min-width:900px){.pricing-grid{grid-template-columns:repeat(3,1fr);}}
+  .price-card{
+    background:var(--white);border:1px solid var(--line);border-radius:18px;
+    padding:32px 28px;display:flex;flex-direction:column;
+  }
+  .price-card.featured{border-color:var(--teal);box-shadow:0 20px 40px -20px rgba(11,93,82,0.35);position:relative;}
+  .price-card.featured .ribbon{
+    position:absolute;top:-13px;left:28px;background:var(--amber);color:var(--teal-dark);
+    font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;
+  }
+  .price-card h3{font-size:20px;font-weight:600;font-family:'Be Vietnam Pro';}
+  .price-card .price{font-family:'Fraunces',serif;font-size:34px;font-weight:700;margin:14px 0 4px;}
+  .price-card .price span{font-size:15px;font-weight:500;color:var(--muted);font-family:'Be Vietnam Pro';}
+  .price-card ul{list-style:none;margin:20px 0 28px;padding:0;font-size:14.5px;color:var(--ink);flex:1;}
+  .price-card li{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);}
+  .price-card li:first-child{border-top:none;}
+  .price-card li .ok{color:var(--teal);font-weight:700;}
+  .price-card li .no{color:var(--muted);}
+
+  /* FAQ */
+  .faq-list{max-width:760px;}
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{
+    width:100%;text-align:left;background:none;border:none;cursor:pointer;
+    padding:22px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:17px;font-weight:600;color:var(--ink);
+  }
+  .faq-q .plus{font-family:'Fraunces',serif;font-size:22px;color:var(--amber-deep);transition:transform .2s;flex-shrink:0;}
+  .faq-item[open] .faq-q .plus{transform:rotate(45deg);}
+  .faq-a{padding:0 0 22px;color:var(--muted);font-size:15.5px;max-width:64ch;}
+
+  /* Lead form */
+  .lead-section{background:var(--paper-alt);border-radius:24px;}
+  .lead-grid{display:grid;grid-template-columns:1fr;gap:40px;align-items:start;}
+  @media(min-width:900px){.lead-grid{grid-template-columns:1fr 1fr;}}
+  .lead-copy h2{font-size:clamp(26px,3.2vw,34px);font-weight:600;}
+  .lead-copy p{color:var(--muted);margin-top:14px;font-size:16px;max-width:42ch;}
+  .lead-points{margin-top:26px;padding:0;list-style:none;}
+  .lead-points li{display:flex;gap:10px;padding:8px 0;font-size:15px;}
+  .lead-points li::before{content:"✓";color:var(--teal);font-weight:700;}
+
+  form.lead-form{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:28px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;color:var(--ink);}
+  .field input,.field textarea{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:15px;background:var(--white);color:var(--ink);
+  }
+  .field input:focus,.field textarea:focus{outline:2.5px solid var(--teal);border-color:var(--teal);}
+  .field textarea{resize:vertical;min-height:80px;}
+  .form-msg{margin-top:14px;font-size:14.5px;font-weight:600;}
+  .form-msg.ok{color:var(--teal);}
+  .form-msg.err{color:#B3401F;}
+  .lead-form button[type=submit]{width:100%;margin-top:6px;}
+
+  footer{padding:48px 0;border-top:1px solid var(--line);}
+  .footer-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;align-items:center;}
+  .footer-row .fmark{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:700;font-size:17px;}
+  .footer-row .fmark em{font-style:italic;color:var(--amber-deep);}
+  .footer-links{display:flex;gap:20px;font-size:14px;color:var(--muted);}
+  .footer-links a{text-decoration:none;}
+  .footer-note{margin-top:24px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="#top" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="assets/logo.svg" alt="ShopOne" style="height:32px;width:auto;">
+    </a>
+    <div class="links">
+      <a href="#tinh-nang">Tính năng</a>
+      <a href="#bang-gia">Bảng giá</a>
+      <a href="#faq">Câu hỏi thường gặp</a>
+    </div>
+    <a href="#dang-ky" class="btn btn-primary nav-cta">Dùng thử miễn phí</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> Đồng bộ đa kênh dưới 60 giây</span>
+        <h1>Bán hàng gọn,<br>sổ sách <em>tự chạy theo.</em></h1>
+        <p class="lead">ShopOne gom tồn kho, công nợ, hóa đơn và đơn hàng từ Shopee/Lazada/TikTok Shop về một màn hình duy nhất — để chủ shop lo việc bán, không phải lo việc sổ sách.</p>
+        <div class="hero-actions">
+          <a href="#dang-ky" class="btn btn-amber">Để lại thông tin, tư vấn miễn phí</a>
+          <a href="#tinh-nang" class="btn btn-ghost">Xem tính năng</a>
+        </div>
+        <p class="hero-note">Dùng thử 14 ngày, không cần thẻ thanh toán.</p>
+      </div>
+      <div class="receipt-wrap">
+        <div class="receipt">
+          <div class="r-head">
+            <div class="logo-mini">Shop<em>One</em></div>
+            <small>Hóa đơn tổng hợp hôm nay</small>
+          </div>
+          <div class="r-divider"></div>
+          <div class="r-row"><span class="label">Đơn hàng cửa hàng</span><span class="value" id="r-store">128</span></div>
+          <div class="r-row"><span class="label">Đơn từ Shopee/Lazada/TikTok</span><span class="value live" id="r-online">64</span></div>
+          <div class="r-row"><span class="label">Tồn kho cập nhật</span><span class="value">Realtime</span></div>
+          <div class="r-divider"></div>
+          <div class="r-total"><span class="label">Doanh thu hôm nay</span><span class="value" id="r-total">18.640.000₫</span></div>
+          <div class="r-sync"><span class="sdot"></span> Đồng bộ lần cuối: vừa xong</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="trust">
+    <div class="wrap trust-row">
+      <span class="chip"><span class="n">&lt;60s</span> đồng bộ đa kênh</span>
+      <span class="chip"><span class="n">AES-256</span> mã hoá dữ liệu</span>
+      <span class="chip"><span class="n">30 phút</span> nhân viên mới học xong</span>
+      <span class="chip"><span class="n">Offline</span> vẫn bán hàng bình thường</span>
+    </div>
+  </div>
+
+  <section id="tinh-nang">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Tính năng</span>
+        <h2>Mọi thứ một cửa hàng cần, không phải mở 5 phần mềm cùng lúc</h2>
+        <p>Từ quầy thu ngân đến báo cáo cuối tháng, ShopOne xử lý gọn trong một hệ thống.</p>
+      </div>
+      <div class="features">
+        <div class="tag-card"><span class="num">01</span><h3>Quản lý tồn kho FIFO/LIFO</h3><p>Theo dõi hàng nhập trước - xuất trước, cảnh báo sắp hết hàng theo thời gian thực.</p></div>
+        <div class="tag-card"><span class="num">02</span><h3>Sổ quỹ &amp; công nợ tự đối soát</h3><p>Ghi nhận thu chi, công nợ khách hàng và nhà cung cấp, tự động khớp sổ.</p></div>
+        <div class="tag-card"><span class="num">03</span><h3>Đồng bộ Shopee, Lazada, TikTok Shop</h3><p>Đơn hàng và tồn kho hai chiều, độ trễ dưới 60 giây qua API chính thức.</p></div>
+        <div class="tag-card"><span class="num">04</span><h3>Phân quyền nhân viên theo vai trò</h3><p>Chủ shop, quản lý, thu ngân — mỗi vai trò thấy đúng phần việc của mình.</p></div>
+        <div class="tag-card"><span class="num">05</span><h3>Báo cáo doanh thu 15 mẫu</h3><p>Đa chiều theo ngày/kênh/nhân viên, xuất file khi cần đối chiếu.</p></div>
+        <div class="tag-card"><span class="num">06</span><h3>Bán hàng cả khi mất mạng</h3><p>Vẫn tạo đơn, in hoá đơn bình thường — dữ liệu tự đồng bộ khi có mạng lại.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="why">
+        <div class="section-head">
+          <span class="eyebrow" style="background:rgba(255,255,255,0.12);color:var(--amber);">Vì sao chủ shop chọn ShopOne</span>
+          <h2>Thiết kế cho người bán hàng, không phải cho dân kỹ thuật</h2>
+          <p>Những câu chủ shop hay hỏi nhất — và cách ShopOne trả lời bằng sản phẩm, không chỉ bằng lời hứa.</p>
+        </div>
+        <div class="why-grid">
+          <div class="why-item"><h3>Không rành máy tính?</h3><p>Màn hình bán hàng chỉ 3 nút chính. Nhân viên mới học 30 phút là bán được, có video hướng dẫn tiếng Việt.</p></div>
+          <div class="why-item"><h3>Đang dùng Excel?</h3><p>Nhập hàng loạt sản phẩm, tồn kho, khách hàng từ file Excel có sẵn — một lần là xong, không nhập lại tay.</p></div>
+          <div class="why-item"><h3>Sợ mất dữ liệu?</h3><p>Sao lưu tự động hàng ngày, mã hoá AES-256. Đổi điện thoại hay máy tính, đăng nhập lại là còn nguyên.</p></div>
+          <div class="why-item"><h3>Muốn dừng thì sao?</h3><p>Gói theo tháng, không ràng buộc dài hạn. Dừng gia hạn là xong, xuất toàn bộ dữ liệu ra Excel trước khi rời đi.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="bang-gia">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Bảng giá</span>
+        <h2>Chọn gói theo quy mô cửa hàng</h2>
+        <p>Cả 3 gói đều có 14 ngày dùng thử miễn phí, không cần thẻ thanh toán.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Cơ bản</h3>
+          <div class="price">199k <span>/ tháng</span></div>
+          <ul>
+            <li><span class="ok">✓</span> 1 cửa hàng, 2 nhân viên</li>
+            <li><span class="ok">✓</span> Quản lý tồn kho</li>
+            <li><span class="ok">✓</span> 3 mẫu báo cáo cơ bản</li>
+            <li><span class="no">–</span> Sổ quỹ &amp; công nợ</li>
+            <li><span class="no">–</span> Đồng bộ sàn TMĐT</li>
+          </ul>
+          <a href="#dang-ky" class="btn btn-ghost">Dùng thử miễn phí</a>
+        </div>
+        <div class="price-card featured">
+          <span class="ribbon">Phổ biến nhất</span>
+          <h3>Tiêu chuẩn</h3>
+          <div class="price">399k <span>/ tháng</span></div>
+          <ul>
+            <li><span class="ok">✓</span> 1 cửa hàng, 5 nhân viên</li>
+            <li><span class="ok">✓</span> Sổ quỹ &amp; công nợ</li>
+            <li><span class="ok">✓</span> Đồng bộ 1 sàn TMĐT</li>
+            <li><span class="ok">✓</span> 15 mẫu báo cáo</li>
+            <li><span class="ok">✓</span> Phân quyền, in tem mã vạch</li>
+          </ul>
+          <a href="#dang-ky" class="btn btn-primary">Dùng thử miễn phí</a>
+        </div>
+        <div class="price-card">
+          <h3>Cao cấp</h3>
+          <div class="price">799k <span>/ tháng</span></div>
+          <ul>
+            <li><span class="ok">✓</span> Không giới hạn cửa hàng, nhân viên</li>
+            <li><span class="ok">✓</span> Đồng bộ cả 3 sàn TMĐT</li>
+            <li><span class="ok">✓</span> Báo cáo tuỳ chỉnh</li>
+            <li><span class="ok">✓</span> Phân quyền, in tem mã vạch</li>
+            <li><span class="ok">✓</span> Hỗ trợ ưu tiên</li>
+          </ul>
+          <a href="#dang-ky" class="btn btn-ghost">Dùng thử miễn phí</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Câu hỏi thường gặp</span>
+        <h2>Còn băn khoăn gì trước khi dùng thử?</h2>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-q">Tôi không rành máy tính, dùng có khó không?<span class="plus">+</span></summary>
+          <div class="faq-a">Màn hình bán hàng chỉ 3 nút chính, nhân viên mới học 30 phút là bán được. Có video hướng dẫn tiếng Việt cho từng thao tác.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Mất mạng thì có bán hàng được không?<span class="plus">+</span></summary>
+          <div class="faq-a">Được. ShopOne có chế độ offline: vẫn tạo đơn, in hoá đơn bình thường; khi có mạng lại, dữ liệu tự đồng bộ lên.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Dữ liệu của tôi có bị mất không?<span class="plus">+</span></summary>
+          <div class="faq-a">Dữ liệu sao lưu tự động hàng ngày trên máy chủ tại Việt Nam, mã hoá AES-256. Đổi điện thoại/máy tính chỉ cần đăng nhập lại là còn nguyên.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Tôi đang dùng Excel, chuyển sang có mất công nhập lại không?<span class="plus">+</span></summary>
+          <div class="faq-a">Không. ShopOne có công cụ nhập hàng loạt từ file Excel: sản phẩm, tồn kho, khách hàng đều nhập một lần là xong.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Có xuất được hoá đơn điện tử không?<span class="plus">+</span></summary>
+          <div class="faq-a">Có, gói Tiêu chuẩn trở lên kết nối trực tiếp với các nhà cung cấp hoá đơn điện tử phổ biến như Viettel, VNPT, MISA meInvoice.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Đăng ký rồi muốn hủy thì sao?<span class="plus">+</span></summary>
+          <div class="faq-a">Gói theo tháng, không ràng buộc hợp đồng dài hạn. Dừng gia hạn là xong, không phí phạt, có thể xuất toàn bộ dữ liệu ra Excel trước khi dừng.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="dang-ky">
+    <div class="wrap">
+      <div class="lead-section" style="padding:56px 40px;">
+        <div class="lead-grid">
+          <div class="lead-copy">
+            <span class="eyebrow">Bắt đầu dùng thử</span>
+            <h2>Để lại thông tin, ShopOne tư vấn trong 24 giờ</h2>
+            <p>Không cần thẻ thanh toán. Đội ngũ ShopOne sẽ gọi lại để hiểu đúng nhu cầu cửa hàng của bạn trước khi bắt đầu dùng thử.</p>
+            <ul class="lead-points">
+              <li>Tư vấn đúng gói phù hợp quy mô cửa hàng</li>
+              <li>Hỗ trợ nhập dữ liệu từ Excel miễn phí</li>
+              <li>14 ngày dùng thử, giữ nguyên dữ liệu khi nâng cấp</li>
+            </ul>
+          </div>
+          <form class="lead-form" id="leadForm">
+            <div class="field">
+              <label for="name">Họ và tên</label>
+              <input type="text" id="name" name="name" required placeholder="Nguyễn Văn A">
+            </div>
+            <div class="field">
+              <label for="phone">Số điện thoại</label>
+              <input type="tel" id="phone" name="phone" required placeholder="09xx xxx xxx">
+            </div>
+            <div class="field">
+              <label for="email">Email (không bắt buộc)</label>
+              <input type="email" id="email" name="email" placeholder="ban@email.com">
+            </div>
+            <div class="field">
+              <label for="note">Cửa hàng của bạn bán gì?</label>
+              <textarea id="note" name="note" placeholder="Ví dụ: shop quần áo, 2 chi nhánh, đang bán trên Shopee"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Gửi thông tin, nhận tư vấn</button>
+            <div id="formMsg" class="form-msg" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-row">
+      <div class="fmark">Shop<em>One</em></div>
+      <div class="footer-links">
+        <a href="#tinh-nang">Tính năng</a>
+        <a href="#bang-gia">Bảng giá</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+    <p class="footer-note">© <span id="year"></span> ShopOne. Phần mềm quản lý bán hàng cho cửa hàng bán lẻ tại Việt Nam.</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Hero receipt ticker — purely cosmetic, respects reduced motion
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce) return;
+    var storeEl = document.getElementById('r-store');
+    var onlineEl = document.getElementById('r-online');
+    var totalEl = document.getElementById('r-total');
+    var store = 128, online = 64, total = 18640000;
+    setInterval(function(){
+      store += Math.floor(Math.random()*2);
+      online += Math.floor(Math.random()*2);
+      total += Math.floor(Math.random()*150000);
+      storeEl.textContent = store.toLocaleString('vi-VN');
+      onlineEl.textContent = online.toLocaleString('vi-VN');
+      totalEl.textContent = total.toLocaleString('vi-VN') + '₫';
+    }, 2600);
+  })();
+
+  // Lead form submit
+  var form = document.getElementById('leadForm');
+  var msg = document.getElementById('formMsg');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msg.textContent = 'Đang gửi...';
+    msg.className = 'form-msg';
+    var payload = {
+      ho_ten: document.getElementById('name').value.trim(),
+      sdt: document.getElementById('phone').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      ghi_chu: document.getElementById('note').value.trim()
+    };
+    fetch('/api/khach', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data.ok){
+        msg.textContent = 'Cảm ơn bạn! ShopOne sẽ liên hệ trong 24 giờ.';
+        msg.className = 'form-msg ok';
+        form.reset();
+      } else {
+        msg.textContent = data.error || 'Có lỗi xảy ra, thử lại giúp mình nhé.';
+        msg.className = 'form-msg err';
+      }
+    }).catch(function(){
+      msg.textContent = 'Không gửi được — kiểm tra lại mạng và thử lại nhé.';
+      msg.className = 'form-msg err';
+    });
+  });
+</script>
+</body>
+</html>
