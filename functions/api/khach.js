@@ -1,4 +1,4 @@
-// Cloudflare Pages Function — /api/khach
+—// Cloudflare Pages Function — /api/khach
 // POST: lưu thông tin khách quan tâm vào Workers KV (namespace binding: LEADS)
 // Yêu cầu Bài 11: nhận JSON { ho_ten, sdt } (tên cột tiếng Việt)
 // GET:  xem lại danh sách khách quan tâm, cần đúng ?key=<ADMIN_KEY> (env var tự đặt trong Cloudflare)
