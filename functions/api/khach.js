@@ -2,6 +2,7 @@
 // POST: nhan du lieu khach quan tam - ho tro CA 2 kieu: JSON hoac form thuong
 // Co bat CORS de cho phep gui tu domain khac (khong phai chinh trang nay)
 // Luu them field trang_thai mac dinh "moi" cho moi khach vua them
+// Sau khi luu thanh cong, tu dong bao qua Telegram (neu da cau hinh)
 // GET: tra ve danh sach khach quan tam (khong yeu cau mat khau)
 
 const CORS_HEADERS = {
@@ -51,6 +52,30 @@ async function parseBody(request) {
   }
 }
 
+async function notifyTelegram(env, record) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
+
+  const text =
+    "Khach moi tu ShopOne!\n" +
+    "Ho ten: " + record.ho_ten + "\n" +
+    "SDT: " + record.sdt +
+    (record.email ? "\nEmail: " + record.email : "") +
+    (record.ghi_chu ? "\nGhi chu: " + record.ghi_chu : "");
+
+  try {
+    await fetch(
+      "https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text }),
+      }
+    );
+  } catch (e) {
+    // Khong de loi Telegram lam hong viec luu khach
+  }
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -95,6 +120,8 @@ export async function onRequestPost(context) {
     if (isJson) return json({ ok: false, error: msg }, 500);
     return plain(msg, 500);
   }
+
+  context.waitUntil(notifyTelegram(env, record));
 
   if (isJson) {
     return json({ ok: true });
