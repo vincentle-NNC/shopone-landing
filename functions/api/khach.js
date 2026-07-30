@@ -1,6 +1,7 @@
 // Cloudflare Pages Function - /api/khach
 // POST: nhan du lieu khach quan tam - ho tro CA 2 kieu: JSON hoac form thuong
 // Co bat CORS de cho phep gui tu domain khac (khong phai chinh trang nay)
+// Luu them field trang_thai mac dinh "moi" cho moi khach vua them
 // GET: tra ve danh sach khach quan tam (khong yeu cau mat khau)
 
 const CORS_HEADERS = {
@@ -77,7 +78,15 @@ export async function onRequestPost(context) {
   }
 
   const id = "khach:" + Date.now() + ":" + Math.random().toString(36).slice(2, 8);
-  const record = { ho_ten, sdt, email, ghi_chu, token, createdAt: new Date().toISOString() };
+  const record = {
+    ho_ten,
+    sdt,
+    email,
+    ghi_chu,
+    token,
+    trang_thai: "moi",
+    createdAt: new Date().toISOString(),
+  };
 
   try {
     await env.LEADS.put(id, JSON.stringify(record));
