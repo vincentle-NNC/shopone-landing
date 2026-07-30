@@ -1,0 +1,25 @@
+name: ShopOne Scheduled Reminders
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+    - cron: '0 11 * * *'
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the right endpoint based on which schedule fired
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          SCHEDULE="${{ github.event.schedule }}"
+          if [ "$SCHEDULE" = "0 11 * * *" ]; then
+            curl -s "https://shopone-d75.pages.dev/api/cron/tongket?key=$CRON_SECRET"
+          elif [ "$SCHEDULE" = "0 0 * * *" ]; then
+            curl -s "https://shopone-d75.pages.dev/api/cron/goiy?key=$CRON_SECRET"
+          else
+            curl -s "https://shopone-d75.pages.dev/api/cron/nhac?key=$CRON_SECRET"
+          fi
