@@ -420,14 +420,14 @@
               <li>14 ngày dùng thử, giữ nguyên dữ liệu khi nâng cấp</li>
             </ul>
           </div>
-          <form class="lead-form" id="leadForm">
+          <form class="lead-form" id="leadForm" action="/api/khach" method="POST">
             <div class="field">
               <label for="name">Họ và tên</label>
-              <input type="text" id="name" name="name" required placeholder="Nguyễn Văn A">
+              <input type="text" id="name" name="ho_ten" required placeholder="Nguyễn Văn A">
             </div>
             <div class="field">
               <label for="phone">Số điện thoại</label>
-              <input type="tel" id="phone" name="phone" required placeholder="09xx xxx xxx">
+              <input type="tel" id="phone" name="sdt" required placeholder="09xx xxx xxx">
             </div>
             <div class="field">
               <label for="email">Email (không bắt buộc)</label>
@@ -435,7 +435,7 @@
             </div>
             <div class="field">
               <label for="note">Cửa hàng của bạn bán gì?</label>
-              <textarea id="note" name="note" placeholder="Ví dụ: shop quần áo, 2 chi nhánh, đang bán trên Shopee"></textarea>
+              <textarea id="note" name="ghi_chu" placeholder="Ví dụ: shop quần áo, 2 chi nhánh, đang bán trên Shopee"></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Gửi thông tin, nhận tư vấn</button>
             <div id="formMsg" class="form-msg" role="status" aria-live="polite"></div>
