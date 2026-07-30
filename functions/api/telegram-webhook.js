@@ -1,34 +1,14 @@
 // Cloudflare Pages Function - /api/telegram-webhook
-// Nhan cac su kien tu Telegram (khi bam nut inline "Da goi").
-// Cap nhat trang_thai cua khach thanh "da_goi" trong kho LEADS.
+// Nhan cac su kien tu Telegram (khi bam nut inline "Da goi" / "Chot don").
+// Cap nhat trang_thai cua khach trong kho LEADS.
 
-async function answerCallback(env, callbackQueryId, text) {
+async function tgCall(env, method, payload) {
   try {
-    await fetch(
-      "https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/answerCallbackQuery",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
-      }
-    );
-  } catch (e) {}
-}
-
-async function editReplyMarkup(env, chatId, messageId, text) {
-  try {
-    await fetch(
-      "https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/editMessageReplyMarkup",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          message_id: messageId,
-          reply_markup: { inline_keyboard: [[{ text: text, callback_data: "done" }]] },
-        }),
-      }
-    );
+    await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/" + method, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
   } catch (e) {}
 }
 
@@ -43,23 +23,43 @@ export async function onRequestPost(context) {
   }
 
   const cq = update.callback_query;
-  if (cq && cq.data && cq.data.startsWith("da_goi:")) {
-    const id = cq.data.slice("da_goi:".length);
+  if (!cq || !cq.data) return new Response("ok");
 
-    if (env.LEADS) {
-      try {
-        const v = await env.LEADS.get(id);
-        if (v) {
-          const record = JSON.parse(v);
-          record.trang_thai = "da_goi";
-          await env.LEADS.put(id, JSON.stringify(record));
-        }
-      } catch (e) {}
-    }
+  let newStatus = null;
+  let id = null;
+  let label = null;
 
-    await answerCallback(env, cq.id, "Da cap nhat: Da goi");
+  if (cq.data.startsWith("da_goi:")) {
+    id = cq.data.slice("da_goi:".length);
+    newStatus = "da_goi";
+    label = "Da goi (xong)";
+  } else if (cq.data.startsWith("chot:")) {
+    id = cq.data.slice("chot:".length);
+    newStatus = "chot";
+    label = "Da chot don!";
+  }
+
+  if (newStatus && id && env.LEADS) {
+    try {
+      const v = await env.LEADS.get(id);
+      if (v) {
+        const record = JSON.parse(v);
+        record.trang_thai = newStatus;
+        await env.LEADS.put(id, JSON.stringify(record));
+      }
+    } catch (e) {}
+
+    await tgCall(env, "answerCallbackQuery", {
+      callback_query_id: cq.id,
+      text: label,
+    });
+
     if (cq.message) {
-      await editReplyMarkup(env, cq.message.chat.id, cq.message.message_id, "Da goi (xong)");
+      await tgCall(env, "editMessageReplyMarkup", {
+        chat_id: cq.message.chat.id,
+        message_id: cq.message.message_id,
+        reply_markup: { inline_keyboard: [[{ text: label, callback_data: "done" }]] },
+      });
     }
   }
 
