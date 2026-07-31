@@ -21,7 +21,7 @@ export async function onRequestGet(context) {
     return json({ ok: false, error: "Chua gan kho luu tru LEADS." }, 500);
   }
 
-  const list = await env.LEADS.list();
+  const list = await env.LEADS.list({ prefix: "khach:" });
   const pending = [];
   for (const k of list.keys) {
     const v = await env.LEADS.get(k.name);
