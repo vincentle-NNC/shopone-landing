@@ -30,7 +30,7 @@ export async function onRequestGet(context) {
   const tok = (url.searchParams.get("token") || "").trim();
   const tokLower = tok.toLowerCase();
 
-  const list = await env.LEADS.list();
+  const list = await env.LEADS.list({ prefix: "khach:" });
   if (!list.keys.length) {
     return json(null);
   }
