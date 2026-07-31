@@ -63,13 +63,12 @@ async function scan(request, env) {
         "danh cho nhan vien sale, nhac goi dien cho khach ten '" + first.ho_ten +
         "' so dien thoai " + first.sdt + " vi khach nay chua duoc goi. Chi tra ve dung 1 cau, khong giai thich them.";
 
-      const aiResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      const aiResp = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         messages: [{ role: "user", content: prompt }],
       });
       aiText = (aiResp && (aiResp.response || aiResp.result || "")).toString().trim() || null;
     } catch (e) {
       aiText = null;
-      globalThis.__lastAiError = (e && e.message) || String(e);
     }
   }
 
@@ -100,7 +99,7 @@ async function scan(request, env) {
     } catch (e) {}
   }
 
-  return { ok: true, ...logRecord, ai_error: globalThis.__lastAiError || null, ai_present: !!env.AI };
+  return { ok: true, ...logRecord };
 }
 
 export async function onRequestGet(context) {
