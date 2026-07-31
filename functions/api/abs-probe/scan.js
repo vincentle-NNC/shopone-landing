@@ -69,6 +69,7 @@ async function scan(request, env) {
       aiText = (aiResp && (aiResp.response || aiResp.result || "")).toString().trim() || null;
     } catch (e) {
       aiText = null;
+      globalThis.__lastAiError = (e && e.message) || String(e);
     }
   }
 
@@ -99,7 +100,7 @@ async function scan(request, env) {
     } catch (e) {}
   }
 
-  return { ok: true, ...logRecord };
+  return { ok: true, ...logRecord, ai_error: globalThis.__lastAiError || null, ai_present: !!env.AI };
 }
 
 export async function onRequestGet(context) {
