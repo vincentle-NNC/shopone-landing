@@ -1,7 +1,7 @@
 // Cloudflare Pages Function - /api/abs-probe/scan
 // Chay dong bo (KHONG dung waitUntil): kiem tra khach chua goi, dung Cloudflare
-// Workers AI de viet 1 cau nhac ngan (model nhe, co gioi han 8s), gui Telegram,
-// LUON ghi 1 ban ghi nhac_viec MOI vao kho (kem probe_nonce + created_at hien tai),
+// Workers AI de viet 1 cau nhac ngan, gui Telegram, LUON ghi 1 ban ghi nhac_viec
+// MOI vao kho (kem probe_nonce lay tu request + created_at la thoi diem hien tai),
 // va tra ve chinh ban ghi vua ghi (khong echo ban ghi cu).
 
 function json(data, status) {
@@ -59,11 +59,11 @@ async function scan(request, env) {
   if (first && env.AI) {
     try {
       const prompt =
-        "Viet mot cau nhac nho ngan gon (duoi 30 tu), than thien, bang tieng Viet, " +
-        "danh cho nhan vien sale, nhac goi dien cho khach ten '" + first.ho_ten +
-        "' so dien thoai " + first.sdt + " vi khach nay chua duoc goi. Chi tra ve dung 1 cau, khong giai thich them.";
+        "Ban la tro ly ban hang. Hay viet dung 1 cau nhac nho ngan gon (duoi 20 tu), " +
+        "than thien, bang tieng Viet, de nhac nhan vien sale goi dien cho khach hang ten '" +
+        first.ho_ten + "' vi khach nay chua duoc lien he. Chi tra loi dung 1 cau, khong giai thich, khong dua so dien thoai vao.";
 
-      const aiPromise = env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
+      const aiPromise = env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         messages: [{ role: "user", content: prompt }],
       });
       const timeoutPromise = new Promise((_, reject) =>
@@ -71,13 +71,24 @@ async function scan(request, env) {
       );
       const aiResp = await Promise.race([aiPromise, timeoutPromise]);
       aiText = (aiResp && (aiResp.response || aiResp.result || "")).toString().trim() || null;
+      if (aiText) {
+        const lower = aiText.toLowerCase();
+        const looksLikeRefusal =
+          lower.includes("xin loi") || lower.includes("xin lỗi") ||
+          lower.includes("khong the") || lower.includes("không thể") ||
+          lower.includes("i cannot") || lower.includes("i'm sorry") ||
+          lower.includes("i am sorry");
+        if (looksLikeRefusal) aiText = null;
+      }
     } catch (e) {
       aiText = null;
     }
   }
 
   const message = first
-    ? (aiText || ("Nhac viec: con " + pending.length + " khach chua goi, dau tien la " + first.ho_ten + " - " + first.sdt))
+    ? (aiText
+        ? (aiText + " (SDT: " + first.sdt + ")")
+        : ("Nhac viec: con " + pending.length + " khach chua goi, dau tien la " + first.ho_ten + " - " + first.sdt))
     : null;
 
   // LUON ghi 1 ban ghi nhac_viec MOI, kem probe_nonce va created_at hien tai
