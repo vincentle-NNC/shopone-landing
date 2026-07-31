@@ -63,9 +63,12 @@ async function scan(request, env) {
   if (first && env.AI) {
     try {
       const prompt =
-        "Ban la tro ly ban hang. Hay viet dung 1 cau nhac nho ngan gon (duoi 20 tu), " +
-        "than thien, bang tieng Viet, de nhac nhan vien sale goi dien cho khach hang ten '" +
-        first.ho_ten + "' vi khach nay chua duoc lien he. Chi tra loi dung 1 cau, khong giai thich, khong dua so dien thoai vao.";
+        "Ban dang nhac NHAN VIEN SALE (khong phai khach hang) hay goi dien cho 1 khach con ton dong. " +
+        "Hay viet dung 1 cau ngan gon (duoi 20 tu), than thien, bang tieng Viet, NOI VOI nhan vien sale " +
+        "(vi du bat dau bang 'Anh/chi nho goi cho khach...' hoac 'Dung quen goi cho khach...'), " +
+        "nhac ho lien he voi khach ten '" + first.ho_ten + "' vi khach nay con chua duoc goi. " +
+        "TUYET DOI KHONG duoc viet nhu dang noi chuyen truc tiep voi khach hang (khong duoc bat dau bang 'Xin chao " + first.ho_ten + "'). " +
+        "Chi tra loi dung 1 cau, khong giai thich, khong dua so dien thoai vao.";
 
       const aiPromise = env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         messages: [{ role: "user", content: prompt }],
