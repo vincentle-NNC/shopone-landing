@@ -18,7 +18,7 @@ function json(data, status) {
 
 async function getProbeNonce(request) {
   const url = new URL(request.url);
-  const fromQuery = url.searchParams.get("probe_nonce");
+  const fromQuery = url.searchParams.get("probe_nonce") || url.searchParams.get("nonce") || url.searchParams.get("token");
   if (fromQuery) return fromQuery;
 
   try {
@@ -26,11 +26,13 @@ async function getProbeNonce(request) {
     if (raw) {
       try {
         const body = JSON.parse(raw);
+        if (body && body.nonce) return String(body.nonce);
         if (body && body.probe_nonce) return String(body.probe_nonce);
+        if (body && body.token) return String(body.token);
       } catch (e) {}
       try {
         const params = new URLSearchParams(raw);
-        const v = params.get("probe_nonce");
+        const v = params.get("nonce") || params.get("probe_nonce") || params.get("token");
         if (v) return v;
       } catch (e) {}
     }
