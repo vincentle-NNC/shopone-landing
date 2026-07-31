@@ -1,6 +1,7 @@
 // Cloudflare Pages Function - /api/abs-probe/scan
 // Chay dong bo (KHONG dung waitUntil): kiem tra khach chua goi, dung Cloudflare
 // Workers AI de viet 1 cau nhac ngan, gui Telegram, va tra ve trong JSON de kiem tra.
+// redeploy-trigger: ai-binding
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
