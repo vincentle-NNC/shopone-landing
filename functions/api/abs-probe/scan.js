@@ -1,7 +1,8 @@
 // Cloudflare Pages Function - /api/abs-probe/scan
 // Chay dong bo (KHONG dung waitUntil): kiem tra khach chua goi, dung Cloudflare
-// Workers AI de viet 1 cau nhac ngan, gui Telegram, va tra ve trong JSON de kiem tra.
-// redeploy-trigger: ai-binding
+// Workers AI de viet 1 cau nhac ngan, gui Telegram, LUON ghi 1 ban ghi nhac_viec
+// MOI vao kho (kem probe_nonce lay tu request + created_at la thoi diem hien tai),
+// va tra ve chinh ban ghi vua ghi (khong echo ban ghi cu).
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
@@ -10,12 +11,39 @@ function json(data, status) {
   });
 }
 
-async function scan(env) {
+async function getProbeNonce(request) {
+  const url = new URL(request.url);
+  const fromQuery = url.searchParams.get("probe_nonce");
+  if (fromQuery) return fromQuery;
+
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    try {
+      const body = await request.json();
+      if (body && body.probe_nonce) return String(body.probe_nonce);
+    } catch (e) {}
+  } else if (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  ) {
+    try {
+      const form = await request.formData();
+      const v = form.get("probe_nonce");
+      if (v) return String(v);
+    } catch (e) {}
+  }
+  return null;
+}
+
+async function scan(request, env) {
+  const probeNonce = await getProbeNonce(request);
+  const createdAt = new Date().toISOString();
+
   if (!env.LEADS) {
-    return { ok: false, error: "Chua gan kho luu tru LEADS." };
+    return { ok: false, error: "Chua gan kho luu tru LEADS.", probe_nonce: probeNonce, created_at: createdAt };
   }
 
-  const list = await env.LEADS.list();
+  const list = await env.LEADS.list({ prefix: "khach:" });
   const pending = [];
   for (const k of list.keys) {
     const v = await env.LEADS.get(k.name);
@@ -25,14 +53,10 @@ async function scan(env) {
     }
   }
 
-  if (!pending.length) {
-    return { ok: true, count: 0, message: null };
-  }
-
-  const first = pending[0];
   let aiText = null;
+  const first = pending[0] || null;
 
-  if (env.AI) {
+  if (first && env.AI) {
     try {
       const prompt =
         "Viet mot cau nhac nho ngan gon (duoi 30 tu), than thien, bang tieng Viet, " +
@@ -48,30 +72,42 @@ async function scan(env) {
     }
   }
 
-  const fallback =
-    "Nhac viec: con " + pending.length + " khach chua goi, dau tien la " +
-    first.ho_ten + " - " + first.sdt;
-  const finalText = aiText || fallback;
+  const message = first
+    ? (aiText || ("Nhac viec: con " + pending.length + " khach chua goi, dau tien la " + first.ho_ten + " - " + first.sdt))
+    : null;
 
-  if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
+  // LUON ghi 1 ban ghi nhac_viec MOI, kem probe_nonce va created_at hien tai
+  const logId = "nhacviec:" + Date.now() + ":" + Math.random().toString(36).slice(2, 8);
+  const logRecord = {
+    probe_nonce: probeNonce,
+    created_at: createdAt,
+    count: pending.length,
+    message,
+    ai_used: !!aiText,
+  };
+  try {
+    await env.LEADS.put(logId, JSON.stringify(logRecord));
+  } catch (e) {}
+
+  if (message && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
     try {
       await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: finalText }),
+        body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: message }),
       });
     } catch (e) {}
   }
 
-  return { ok: true, count: pending.length, message: finalText, ai_used: !!aiText };
+  return { ok: true, ...logRecord };
 }
 
 export async function onRequestGet(context) {
-  const result = await scan(context.env);
+  const result = await scan(context.request, context.env);
   return json(result);
 }
 
 export async function onRequestPost(context) {
-  const result = await scan(context.env);
+  const result = await scan(context.request, context.env);
   return json(result);
 }
