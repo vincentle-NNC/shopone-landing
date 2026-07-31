@@ -1,7 +1,7 @@
 // Cloudflare Pages Function - /api/abs-probe/scan
 // Chay dong bo (KHONG dung waitUntil): kiem tra khach chua goi, dung Cloudflare
-// Workers AI de viet 1 cau nhac ngan, gui Telegram, LUON ghi 1 ban ghi nhac_viec
-// MOI vao kho (kem probe_nonce lay tu request + created_at la thoi diem hien tai),
+// Workers AI de viet 1 cau nhac ngan (model nhe, co gioi han 8s), gui Telegram,
+// LUON ghi 1 ban ghi nhac_viec MOI vao kho (kem probe_nonce + created_at hien tai),
 // va tra ve chinh ban ghi vua ghi (khong echo ban ghi cu).
 
 function json(data, status) {
@@ -63,9 +63,13 @@ async function scan(request, env) {
         "danh cho nhan vien sale, nhac goi dien cho khach ten '" + first.ho_ten +
         "' so dien thoai " + first.sdt + " vi khach nay chua duoc goi. Chi tra ve dung 1 cau, khong giai thich them.";
 
-      const aiResp = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+      const aiPromise = env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
         messages: [{ role: "user", content: prompt }],
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("AI timeout")), 8000)
+      );
+      const aiResp = await Promise.race([aiPromise, timeoutPromise]);
       aiText = (aiResp && (aiResp.response || aiResp.result || "")).toString().trim() || null;
     } catch (e) {
       aiText = null;
