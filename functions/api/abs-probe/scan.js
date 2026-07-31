@@ -16,22 +16,21 @@ async function getProbeNonce(request) {
   const fromQuery = url.searchParams.get("probe_nonce");
   if (fromQuery) return fromQuery;
 
-  const contentType = request.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    try {
-      const body = await request.json();
-      if (body && body.probe_nonce) return String(body.probe_nonce);
-    } catch (e) {}
-  } else if (
-    contentType.includes("application/x-www-form-urlencoded") ||
-    contentType.includes("multipart/form-data")
-  ) {
-    try {
-      const form = await request.formData();
-      const v = form.get("probe_nonce");
-      if (v) return String(v);
-    } catch (e) {}
-  }
+  try {
+    const raw = await request.text();
+    if (raw) {
+      try {
+        const body = JSON.parse(raw);
+        if (body && body.probe_nonce) return String(body.probe_nonce);
+      } catch (e) {}
+      try {
+        const params = new URLSearchParams(raw);
+        const v = params.get("probe_nonce");
+        if (v) return v;
+      } catch (e) {}
+    }
+  } catch (e) {}
+
   return null;
 }
 
@@ -117,8 +116,44 @@ async function scan(request, env) {
   return { ok: true, ...logRecord };
 }
 
+async function readLatest(request, env) {
+  if (!env.LEADS) {
+    return { ok: false, error: "Chua gan kho luu tru LEADS." };
+  }
+
+  const url = new URL(request.url);
+  const wantNonce = url.searchParams.get("probe_nonce");
+
+  const list = await env.LEADS.list({ prefix: "nhacviec:" });
+  if (!list.keys.length) {
+    return { ok: true, probe_nonce: null, created_at: null, message: null, count: 0 };
+  }
+
+  const records = [];
+  for (const k of list.keys) {
+    const v = await env.LEADS.get(k.name);
+    if (v) {
+      const parts = k.name.split(":");
+      const t = parseInt(parts[1], 10) || 0;
+      records.push({ t, record: JSON.parse(v) });
+    }
+  }
+  records.sort((a, b) => b.t - a.t);
+
+  if (wantNonce) {
+    const found = records.find(function (item) { return item.record.probe_nonce === wantNonce; });
+    return { ok: true, ...(found ? found.record : { probe_nonce: null, created_at: null, message: null, count: 0 }) };
+  }
+
+  return { ok: true, ...records[0].record };
+}
+
 export async function onRequestGet(context) {
-  const result = await scan(context.request, context.env);
+  const url = new URL(context.request.url);
+  const hasNonceToWrite = url.searchParams.get("probe_nonce");
+  const result = hasNonceToWrite
+    ? await scan(context.request, context.env)
+    : await readLatest(context.request, context.env);
   return json(result);
 }
 
