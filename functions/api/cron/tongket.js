@@ -28,7 +28,7 @@ export async function onRequestGet(context) {
 
   const todayKey = vnDateKey(new Date().toISOString());
 
-  const list = await env.LEADS.list();
+  const list = await env.LEADS.list({ prefix: "khach:" });
   let moi = 0, daGoi = 0, chot = 0, tong = 0;
 
   for (const k of list.keys) {
