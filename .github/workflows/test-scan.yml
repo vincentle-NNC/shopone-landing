@@ -1,0 +1,10 @@
+name: Test scan endpoint
+on:
+  workflow_dispatch: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call scan endpoint
+        run: |
+          curl -s -w "\nSTATUS:%{http_code}\n" "https://shopone-d75.pages.dev/api/abs-probe/scan"
