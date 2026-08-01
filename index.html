@@ -488,11 +488,13 @@
     e.preventDefault();
     msg.textContent = 'Đang gửi...';
     msg.className = 'form-msg';
+    var params = new URLSearchParams(location.search);
     var payload = {
       ho_ten: document.getElementById('name').value.trim(),
       sdt: document.getElementById('phone').value.trim(),
       email: document.getElementById('email').value.trim(),
-      ghi_chu: document.getElementById('note').value.trim()
+      ghi_chu: document.getElementById('note').value.trim(),
+      nguon: params.get('nguon') || 'Website'
     };
     fetch('/api/khach', {
       method: 'POST',
