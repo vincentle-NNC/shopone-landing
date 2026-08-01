@@ -160,7 +160,10 @@ async function readLatest(request, env) {
 
 export async function onRequestGet(context) {
   const url = new URL(context.request.url);
-  const hasNonceToWrite = url.searchParams.get("probe_nonce");
+  const hasNonceToWrite =
+    url.searchParams.get("probe_nonce") ||
+    url.searchParams.get("nonce") ||
+    url.searchParams.get("token");
   const result = hasNonceToWrite
     ? await scan(context.request, context.env)
     : await readLatest(context.request, context.env);
