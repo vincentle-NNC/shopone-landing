@@ -6,6 +6,7 @@
 // - so_da_chot: so khach da chot trong thang nay
 // - tong_doanh_so: tong so_tien cua cac khach da chot trong thang nay
 // Kem toan bo danh sach khach (moi thoi diem) de hien thi bang quan ly.
+// redeploy-trigger: nv-ma-tot-nghiep
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
