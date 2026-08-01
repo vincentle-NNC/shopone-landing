@@ -22,22 +22,12 @@
   a{color:inherit;}
 
   header{padding:20px 0;border-bottom:1px solid var(--line);}
-  .header-row{display:flex;align-items:center;justify-content:space-between;}
+  .header-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   .logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:700;font-size:18px;}
   .logo em{font-style:italic;color:var(--amber-deep);}
   .tag{font-size:13px;color:var(--muted);background:var(--paper-alt);padding:4px 10px;border-radius:999px;}
 
   main{padding:36px 0 80px;}
-
-  /* Gate */
-  #gate{max-width:420px;margin:60px auto;background:var(--white);border:1px solid var(--line);border-radius:16px;padding:32px;text-align:center;}
-  #gate h2{font-size:22px;margin-bottom:8px;}
-  #gate p{color:var(--muted);font-size:14px;margin:0 0 20px;}
-  #gate input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:12px;font-family:inherit;}
-  #gate button{width:100%;padding:12px;border:none;border-radius:10px;background:var(--teal);color:var(--white);font-weight:600;font-size:15px;cursor:pointer;}
-  #gate .err{color:#B3401F;font-size:13px;margin-top:10px;min-height:16px;}
-
-  #report{display:none;}
 
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;}
   .card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;}
@@ -71,7 +61,7 @@
   .btn-sm.gold{background:var(--amber);color:var(--teal-dark);border-color:var(--amber);}
 
   .money{font-variant-numeric:tabular-nums;font-weight:600;}
-  #loadingRow, #emptyRow{text-align:center;color:var(--muted);padding:24px;}
+  .note{font-size:13px;color:var(--muted);margin-top:-10px;margin-bottom:24px;}
 </style>
 </head>
 <body>
@@ -79,54 +69,47 @@
 <header>
   <div class="wrap header-row">
     <div class="logo">Shop<em>One</em> — Báo cáo</div>
-    <span class="tag" id="thangTag">—</span>
-    <span class="tag" id="hoanThanhTag" style="display:none;"></span>
+    <div>
+      <span class="tag" id="thangTag">—</span>
+      <span class="tag" id="hoanThanhTag" style="display:none;"></span>
+    </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div id="gate">
-    <h2>Nhập mật khẩu quản trị</h2>
-    <p>Trang này chỉ dành cho chủ shop — dùng đúng mật khẩu bạn đã đặt trong Cloudflare (ADMIN_KEY).</p>
-    <input type="password" id="gateKey" placeholder="Mật khẩu">
-    <button id="gateBtn">Xem báo cáo</button>
-    <div class="err" id="gateErr"></div>
+  <div class="cards">
+    <div class="card">
+      <div class="label">Lead trong tháng</div>
+      <div class="value" id="cardTongLead">0</div>
+    </div>
+    <div class="card">
+      <div class="label">Đã chốt</div>
+      <div class="value" id="cardSoChot">0</div>
+    </div>
+    <div class="card amber">
+      <div class="label">Doanh số tháng</div>
+      <div class="value" id="cardDoanhSo">0đ</div>
+    </div>
   </div>
 
-  <div id="report">
-    <div class="cards">
-      <div class="card">
-        <div class="label">Khách trong tháng</div>
-        <div class="value" id="cardTongKhach">0</div>
-      </div>
-      <div class="card">
-        <div class="label">Đã chốt</div>
-        <div class="value" id="cardDaChot">0</div>
-      </div>
-      <div class="card amber">
-        <div class="label">Doanh số tháng</div>
-        <div class="value" id="cardDoanhSo">0đ</div>
-      </div>
-    </div>
+  <div class="panel">
+    <h2>Khách theo nguồn (tháng này)</h2>
+    <div id="nguonList"></div>
+  </div>
 
-    <div class="panel">
-      <h2>Khách theo nguồn (tháng này)</h2>
-      <div id="nguonList"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Danh sách khách (tất cả)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tên</th><th>SĐT</th><th>Nguồn</th><th>Trạng thái</th><th>Số tiền</th><th>Ngày tạo</th><th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody id="khachBody">
-          <tr><td id="loadingRow" colspan="7">Đang tải...</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="panel">
+    <h2>Danh sách khách (tất cả)</h2>
+    <p class="note">Cần mật khẩu quản trị (ADMIN_KEY) để đổi trạng thái — trang sẽ hỏi khi bạn bấm nút thao tác.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên</th><th>SĐT</th><th>Nguồn</th><th>Trạng thái</th><th>Số tiền</th><th>Ngày tạo</th><th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="khachBody">
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Đang tải...</td></tr>
+      </tbody>
+    </table>
   </div>
 </main>
 
@@ -141,6 +124,12 @@
   }
   function statusLabel(s) {
     return { moi: 'Mới', da_goi: 'Đã gọi', chot: 'Đã chốt', mat: 'Mất khách' }[s] || s;
+  }
+
+  function ensureAdminKey() {
+    if (ADMIN_KEY) return ADMIN_KEY;
+    ADMIN_KEY = prompt('Nhập mật khẩu quản trị (ADMIN_KEY) để thực hiện thao tác này:') || '';
+    return ADMIN_KEY;
   }
 
   function renderNguon(theoNguon) {
@@ -181,7 +170,7 @@
     var body = document.getElementById('khachBody');
     body.innerHTML = '';
     if (!khach.length) {
-      body.innerHTML = '<tr><td id="emptyRow" colspan="7">Chưa có khách nào.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Chưa có khách nào.</td></tr>';
       return;
     }
     khach.forEach(function(k){
@@ -199,14 +188,18 @@
   }
 
   async function capNhat(id, trang_thai, so_tien) {
+    var key = ensureAdminKey();
+    if (!key) return { ok: false, error: 'Cần mật khẩu để thao tác.' };
     var body = { id: id, trang_thai: trang_thai };
     if (typeof so_tien !== 'undefined') body.so_tien = so_tien;
-    var r = await fetch('/api/khach/cap-nhat?key=' + encodeURIComponent(ADMIN_KEY), {
+    var r = await fetch('/api/khach/cap-nhat?key=' + encodeURIComponent(key), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    return r.json();
+    var res = await r.json();
+    if (r.status === 401) { ADMIN_KEY = ''; }
+    return res;
   }
 
   document.getElementById('khachBody').addEventListener('click', async function(e){
@@ -229,43 +222,39 @@
       var res2 = await capNhat(id, act);
       if (!res2.ok) { alert('Lỗi: ' + res2.error); return; }
     }
-    loadReport();
+    loadAll();
   });
 
-  async function loadReport() {
-    var r = await fetch('/api/bao-cao?key=' + encodeURIComponent(ADMIN_KEY), { cache: 'no-store' });
-    if (r.status === 401) {
-      document.getElementById('gate').style.display = 'block';
-      document.getElementById('report').style.display = 'none';
-      document.getElementById('gateErr').textContent = 'Sai mật khẩu, thử lại nhé.';
-      return;
-    }
+  async function loadSummary() {
+    var r = await fetch('/api/bao-cao', { cache: 'no-store' });
     var j = await r.json();
-    if (!j.ok) { alert('Lỗi tải báo cáo: ' + j.error); return; }
+    if (!j.ok) { console.error(j.error); return; }
 
-    document.getElementById('gate').style.display = 'none';
-    document.getElementById('report').style.display = 'block';
-    document.getElementById('thangTag').textContent = 'Tháng ' + j.thang;
-    if (j.hoan_thanh) {
+    document.getElementById('thangTag').textContent = 'Tháng ' + j.ky;
+    if (j.ma_tot_nghiep) {
       var htTag = document.getElementById('hoanThanhTag');
-      htTag.textContent = 'Mã hoàn thành: ' + j.hoan_thanh;
+      htTag.textContent = 'Mã hoàn thành: ' + j.ma_tot_nghiep;
       htTag.style.display = 'inline-block';
     }
-    document.getElementById('cardTongKhach').textContent = j.tong_khach_thang;
-    document.getElementById('cardDaChot').textContent = j.so_da_chot;
-    document.getElementById('cardDoanhSo').textContent = formatMoney(j.tong_doanh_so);
-    renderNguon(j.theo_nguon);
+    document.getElementById('cardTongLead').textContent = j.tong_lead;
+    document.getElementById('cardSoChot').textContent = j.so_chot;
+    document.getElementById('cardDoanhSo').textContent = formatMoney(j.doanh_so);
+    renderNguon(j.chi_tiet_nguon);
+  }
+
+  async function loadTable() {
+    var r = await fetch('/api/khach', { cache: 'no-store' });
+    var j = await r.json();
+    if (!j.ok) { console.error(j.error); return; }
     renderTable(j.khach);
   }
 
-  document.getElementById('gateBtn').addEventListener('click', function(){
-    ADMIN_KEY = document.getElementById('gateKey').value.trim();
-    if (!ADMIN_KEY) return;
-    loadReport();
-  });
-  document.getElementById('gateKey').addEventListener('keydown', function(e){
-    if (e.key === 'Enter') document.getElementById('gateBtn').click();
-  });
+  function loadAll() {
+    loadSummary();
+    loadTable();
+  }
+
+  loadAll();
 </script>
 </body>
 </html>
