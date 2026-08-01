@@ -80,6 +80,7 @@
   <div class="wrap header-row">
     <div class="logo">Shop<em>One</em> — Báo cáo</div>
     <span class="tag" id="thangTag">—</span>
+    <span class="tag" id="hoanThanhTag" style="display:none;"></span>
   </div>
 </header>
 
@@ -245,6 +246,11 @@
     document.getElementById('gate').style.display = 'none';
     document.getElementById('report').style.display = 'block';
     document.getElementById('thangTag').textContent = 'Tháng ' + j.thang;
+    if (j.hoan_thanh) {
+      var htTag = document.getElementById('hoanThanhTag');
+      htTag.textContent = 'Mã hoàn thành: ' + j.hoan_thanh;
+      htTag.style.display = 'inline-block';
+    }
     document.getElementById('cardTongKhach').textContent = j.tong_khach_thang;
     document.getElementById('cardDaChot').textContent = j.so_da_chot;
     document.getElementById('cardDoanhSo').textContent = formatMoney(j.tong_doanh_so);
