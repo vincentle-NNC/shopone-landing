@@ -1,9 +1,10 @@
 // Cloudflare Pages Function - /api/khach
 // POST: nhan du lieu khach quan tam - ho tro CA 2 kieu: JSON hoac form thuong
 // Co bat CORS de cho phep gui tu domain khac (khong phai chinh trang nay)
-// Luu them field trang_thai mac dinh "moi" cho moi khach vua them
-// Sau khi luu thanh cong, tu dong bao qua Telegram kem nut "Da goi" / "Chot don"
-// GET: tra ve danh sach khach quan tam (khong yeu cau mat khau)
+// Luu them field trang_thai (moi/da_goi/chot/mat), nguon, so_tien (deal da chot)
+// Sau khi luu thanh cong, tu dong bao qua Telegram kem nut "Da goi" / "Mat"
+// (Chot don co nhap so tien lam o trang bao cao, khong lam qua Telegram)
+// GET: tra ve danh sach khach quan tam (khong yeu cau mat khau), kem id de quan ly
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -59,6 +60,7 @@ async function notifyTelegram(env, record, id) {
     "Khach moi tu ShopOne!\n" +
     "Ho ten: " + record.ho_ten + "\n" +
     "SDT: " + record.sdt +
+    (record.nguon ? "\nNguon: " + record.nguon : "") +
     (record.email ? "\nEmail: " + record.email : "") +
     (record.ghi_chu ? "\nGhi chu: " + record.ghi_chu : "");
 
@@ -74,7 +76,7 @@ async function notifyTelegram(env, record, id) {
           reply_markup: {
             inline_keyboard: [[
               { text: "Da goi", callback_data: "da_goi:" + id },
-              { text: "Chot don", callback_data: "chot:" + id },
+              { text: "Mat", callback_data: "mat:" + id },
             ]],
           },
         }),
@@ -104,6 +106,7 @@ export async function onRequestPost(context) {
   const email = (data.email || "").toString().trim();
   const ghi_chu = (data.ghi_chu || data.note || "").toString().trim();
   const token = (data.token || data.ma || "").toString().trim();
+  const nguon = (data.nguon || data.source || "Website").toString().trim() || "Website";
 
   if (!ho_ten || !sdt) {
     const msg = "Vui long nhap du ho_ten va sdt.";
@@ -118,7 +121,9 @@ export async function onRequestPost(context) {
     email,
     ghi_chu,
     token,
+    nguon,
     trang_thai: "moi",
+    so_tien: 0,
     createdAt: new Date().toISOString(),
   };
 
@@ -151,7 +156,10 @@ export async function onRequestGet(context) {
   const items = [];
   for (const k of list.keys) {
     const v = await env.LEADS.get(k.name);
-    if (v) items.push(JSON.parse(v));
+    if (v) {
+      const record = JSON.parse(v);
+      items.push({ id: k.name, ...record });
+    }
   }
   items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
