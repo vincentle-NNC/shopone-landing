@@ -1,6 +1,7 @@
 // Cloudflare Pages Function - /api/telegram-webhook
-// Nhan cac su kien tu Telegram (khi bam nut inline "Da goi" / "Chot don").
+// Nhan cac su kien tu Telegram (khi bam nut inline "Da goi" / "Mat").
 // Cap nhat trang_thai cua khach trong kho LEADS.
+// (Chot don co nhap so tien deal duoc lam rieng o trang bao-cao.html)
 
 async function tgCall(env, method, payload) {
   try {
@@ -33,10 +34,14 @@ export async function onRequestPost(context) {
     id = cq.data.slice("da_goi:".length);
     newStatus = "da_goi";
     label = "Da goi (xong)";
+  } else if (cq.data.startsWith("mat:")) {
+    id = cq.data.slice("mat:".length);
+    newStatus = "mat";
+    label = "Da danh dau: Mat";
   } else if (cq.data.startsWith("chot:")) {
     id = cq.data.slice("chot:".length);
     newStatus = "chot";
-    label = "Da chot don!";
+    label = "Da chot (vao trang bao cao de nhap tien)";
   }
 
   if (newStatus && id && env.LEADS) {
