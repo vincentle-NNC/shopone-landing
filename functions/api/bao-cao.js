@@ -1,12 +1,8 @@
 // Cloudflare Pages Function - /api/bao-cao
-// GET ?key=<ADMIN_KEY>: tra ve so lieu bao cao THANG HIEN TAI (gio Vietnam),
-// tinh bang phep dem/cong thuan tuy tu du lieu trong kho - KHONG dung AI.
-// - tong_khach_thang: tong so khach tao trong thang nay
-// - theo_nguon: so khach trong thang nay, gom theo nguon
-// - so_da_chot: so khach da chot trong thang nay
-// - tong_doanh_so: tong so_tien cua cac khach da chot trong thang nay
-// Kem toan bo danh sach khach (moi thoi diem) de hien thi bang quan ly.
-// redeploy-trigger: nv-ma-tot-nghiep
+// GET: CONG KHAI, khong yeu cau dang nhap. Tra ve so lieu THANG HIEN TAI
+// (gio Vietnam), tinh bang phep dem/cong thuan tuy - KHONG dung AI, KHONG
+// tra ve danh sach ten/SDT khach hang (bao ve du lieu ca nhan).
+// Cac truong tra ve: ky, ma_tot_nghiep, tong_lead, so_chot, doanh_so, chi_tiet_nguon
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -30,13 +26,8 @@ function vnMonthKey(isoString) {
 }
 
 export async function onRequestGet(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const key = url.searchParams.get("key") || "";
+  const { env } = context;
 
-  if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) {
-    return json({ ok: false, error: "Khong co quyen." }, 401);
-  }
   if (!env.LEADS) {
     return json({ ok: false, error: "Chua gan kho luu tru LEADS." }, 500);
   }
@@ -44,37 +35,35 @@ export async function onRequestGet(context) {
   const thisMonth = vnMonthKey(new Date().toISOString());
 
   const list = await env.LEADS.list({ prefix: "khach:" });
-  const allKhach = [];
+
+  let tong_lead = 0;
+  let so_chot = 0;
+  let doanh_so = 0;
+  const chi_tiet_nguon = {};
+
   for (const k of list.keys) {
     const v = await env.LEADS.get(k.name);
-    if (v) allKhach.push({ id: k.name, ...JSON.parse(v) });
-  }
-  allKhach.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (!v) continue;
+    const r = JSON.parse(v);
+    if (vnMonthKey(r.createdAt) !== thisMonth) continue;
 
-  const thangNay = allKhach.filter(function (k) { return vnMonthKey(k.createdAt) === thisMonth; });
+    tong_lead++;
+    const nguon = r.nguon || "Khac";
+    chi_tiet_nguon[nguon] = (chi_tiet_nguon[nguon] || 0) + 1;
 
-  let tong_khach_thang = thangNay.length;
-  let so_da_chot = 0;
-  let tong_doanh_so = 0;
-  const theo_nguon = {};
-
-  for (const k of thangNay) {
-    const nguon = k.nguon || "Khac";
-    theo_nguon[nguon] = (theo_nguon[nguon] || 0) + 1;
-    if (k.trang_thai === "chot") {
-      so_da_chot++;
-      tong_doanh_so += Number(k.so_tien) || 0;
+    if (r.trang_thai === "chot") {
+      so_chot++;
+      doanh_so += Number(r.so_tien) || 0;
     }
   }
 
   return json({
     ok: true,
-    hoan_thanh: env.NV_MA_TOT_NGHIEP || null,
-    thang: thisMonth,
-    tong_khach_thang,
-    theo_nguon,
-    so_da_chot,
-    tong_doanh_so,
-    khach: allKhach,
+    ky: thisMonth,
+    ma_tot_nghiep: env.NV_MA_TOT_NGHIEP || null,
+    tong_lead,
+    so_chot,
+    doanh_so,
+    chi_tiet_nguon,
   });
 }
