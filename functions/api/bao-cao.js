@@ -3,7 +3,8 @@
 // dung thang do; neu khong truyen (hoac sai dinh dang) thi mac dinh thang
 // hien tai (gio Vietnam). Tinh bang phep dem/cong thuan tuy - KHONG dung AI,
 // KHONG tra ve danh sach ten/SDT khach hang (bao ve du lieu ca nhan).
-// Cac truong tra ve: ky, ma_tot_nghiep, tong_lead, so_chot, doanh_so, chi_tiet_nguon
+// Cac truong tra ve: ky, ma_tot_nghiep, tong_lead, so_chot, doanh_so,
+// chi_tiet_nguon (MANG cac phan tu {nguon, so_luong})
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,10 @@ export async function onRequestGet(context) {
     }
   }
 
+  const chiTietNguonArr = Object.keys(chi_tiet_nguon).map(function (n) {
+    return { nguon: n, so_luong: chi_tiet_nguon[n] };
+  });
+
   return json({
     ok: true,
     ky: thisMonth,
@@ -72,6 +77,6 @@ export async function onRequestGet(context) {
     tong_lead,
     so_chot,
     doanh_so,
-    chi_tiet_nguon,
+    chi_tiet_nguon: chiTietNguonArr,
   });
 }
