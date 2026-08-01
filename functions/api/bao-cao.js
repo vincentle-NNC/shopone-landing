@@ -68,7 +68,7 @@ export async function onRequestGet(context) {
 
   return json({
     ok: true,
-    hoan_thanh: "NV15-ZVNPCP",
+    hoan_thanh: env.NV_MA_TOT_NGHIEP || null,
     thang: thisMonth,
     tong_khach_thang,
     theo_nguon,
