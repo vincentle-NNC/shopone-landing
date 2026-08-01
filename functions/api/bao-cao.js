@@ -1,7 +1,8 @@
 // Cloudflare Pages Function - /api/bao-cao
-// GET: CONG KHAI, khong yeu cau dang nhap. Tra ve so lieu THANG HIEN TAI
-// (gio Vietnam), tinh bang phep dem/cong thuan tuy - KHONG dung AI, KHONG
-// tra ve danh sach ten/SDT khach hang (bao ve du lieu ca nhan).
+// GET: CONG KHAI, khong yeu cau dang nhap. Co the truyen ?ky=YYYY-MM de xem
+// dung thang do; neu khong truyen (hoac sai dinh dang) thi mac dinh thang
+// hien tai (gio Vietnam). Tinh bang phep dem/cong thuan tuy - KHONG dung AI,
+// KHONG tra ve danh sach ten/SDT khach hang (bao ve du lieu ca nhan).
 // Cac truong tra ve: ky, ma_tot_nghiep, tong_lead, so_chot, doanh_so, chi_tiet_nguon
 
 const CORS_HEADERS = {
@@ -25,14 +26,21 @@ function vnMonthKey(isoString) {
   return d.toISOString().slice(0, 7);
 }
 
+function isValidMonthKey(s) {
+  return /^\d{4}-\d{2}$/.test(s);
+}
+
 export async function onRequestGet(context) {
-  const { env } = context;
+  const { env, request } = context;
 
   if (!env.LEADS) {
     return json({ ok: false, error: "Chua gan kho luu tru LEADS." }, 500);
   }
 
-  const thisMonth = vnMonthKey(new Date().toISOString());
+  const url = new URL(request.url);
+  const kyParam = url.searchParams.get("ky");
+  const thisMonth =
+    kyParam && isValidMonthKey(kyParam) ? kyParam : vnMonthKey(new Date().toISOString());
 
   const list = await env.LEADS.list({ prefix: "khach:" });
 
