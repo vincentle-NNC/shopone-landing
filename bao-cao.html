@@ -132,19 +132,19 @@
     return ADMIN_KEY;
   }
 
-  function renderNguon(theoNguon) {
+  function renderNguon(chiTietNguon) {
     var el = document.getElementById('nguonList');
     el.innerHTML = '';
-    var keys = Object.keys(theoNguon || {});
-    if (!keys.length) {
+    var arr = chiTietNguon || [];
+    if (!arr.length) {
       el.innerHTML = '<p style="color:var(--muted);font-size:14px;">Chưa có khách nào trong tháng này.</p>';
       return;
     }
-    keys.sort(function(a,b){ return theoNguon[b] - theoNguon[a]; });
-    keys.forEach(function(k){
+    var sorted = arr.slice().sort(function(a,b){ return b.so_luong - a.so_luong; });
+    sorted.forEach(function(item){
       var row = document.createElement('div');
       row.className = 'nguon-row';
-      row.innerHTML = '<span>' + k + '</span><span class="n">' + theoNguon[k] + ' khách</span>';
+      row.innerHTML = '<span>' + item.nguon + '</span><span class="n">' + item.so_luong + ' khách</span>';
       el.appendChild(row);
     });
   }
