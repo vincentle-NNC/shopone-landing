@@ -1,6 +1,6 @@
 // Cloudflare Pages Function - /api/abs-probe/can-nhac
 // GET ?token=<nonce>: tra ve MANG JSON cac ban ghi nhac_viec co probe_nonce
-// trung voi token. Moi ban ghi gom: probe_nonce, so_khach_chua_goi, noi_dung_ai.
+// trung voi token. Moi ban ghi gom: probe_nonce, so_khach_chua_goi, noi_dung_ai, created_at.
 // Neu khong co token, tra ve toan bo (moi nhat truoc).
 
 function json(data, status) {
@@ -34,6 +34,7 @@ export async function onRequestGet(context) {
           probe_nonce: r.probe_nonce || null,
           so_khach_chua_goi: typeof r.count === "number" ? r.count : 0,
           noi_dung_ai: r.message || null,
+          created_at: r.created_at || null,
         },
       });
     }
